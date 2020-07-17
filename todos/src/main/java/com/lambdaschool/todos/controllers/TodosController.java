@@ -1,38 +1,53 @@
 package com.lambdaschool.todos.controllers;
 
-import com.lambdaschool.todos.services.TodosService;
+import com.lambdaschool.todos.models.Todo;
+import com.lambdaschool.todos.services.TodoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-/**
- * The entry point for client to access user, todos combinations
- */
+import java.net.URI;
+import java.net.URISyntaxException;
+
 @RestController
 @RequestMapping("/todos")
-public class TodosController
-{
-    /**
-     * Using the Todos service to process user, todos combinations data
-     */
-    @Autowired
-    TodosService todosService;
+public class TodosController {
 
-    /**
-     * Given the todo id, mark the task as complete
-     * <br>Example: <a href="http://localhost:2019/todos/todo/7">http://localhost:2019/todos/todo/7</a>
-     *
-     * @param todoid The todo to be marked complete
-     * @return Status of OK
-     */
-    @PatchMapping(value = "/todo/{todoid}")
-    public ResponseEntity<?> completeTodo(@PathVariable long todoid)
-    {
-        todosService.markComplete(todoid);
+    @Autowired
+    TodoService todoService;
+
+    @PostMapping(value = "/user/{userid}")
+    public ResponseEntity<?> addNewTodo(
+            @PathVariable
+                    long userid,
+            @RequestBody
+                    Todo todo) throws URISyntaxException {
+        Todo newTodo = todoService.save(userid,
+                todo.getDescription());
+
+        // set the location header for the newly created resource
+        HttpHeaders responseHeaders = new HttpHeaders();
+        URI newTodoURI = ServletUriComponentsBuilder.fromCurrentServletMapping()
+                .path("/todos/user/{userid}")
+                .buildAndExpand(newTodo.getTodoid())
+                .toUri();
+        responseHeaders.setLocation(newTodoURI);
+
+        return new ResponseEntity<>(null,
+                responseHeaders,
+                HttpStatus.CREATED);
+    }
+
+    @PatchMapping(value = "/todo/{todoid}",
+            consumes = {"application/json"})
+    public ResponseEntity<?> updateTodo(
+            @PathVariable
+                    long todoid) {
+        todoService.update(todoid);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
 }
