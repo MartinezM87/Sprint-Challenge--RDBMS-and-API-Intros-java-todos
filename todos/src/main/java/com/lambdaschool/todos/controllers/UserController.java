@@ -62,7 +62,7 @@ public class UserController {
                 HttpStatus.CREATED);
     }
 
-    @DeleteMapping(value = "/userid/{userid}")
+    @DeleteMapping(value = "/user/{userid}")
     public ResponseEntity<?> deleteUserById(
             @PathVariable
                     long userid) {
